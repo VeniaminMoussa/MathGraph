@@ -1,0 +1,308 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+} 
+@section scripts{
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">google.charts.load('current', { 'packages': ['corechart'] });</script>
+
+    <script>
+        async function drawLineChart(buttonElement) {
+            
+            event.preventDefault();
+
+            lineChart.style.height = "800px";
+            var chart = new google.visualization.LineChart(document.getElementById('lineChart'));
+            var data, view;
+            form = buttonElement.form;
+
+            // aysnchronous fetch ajax
+            fetch(buttonElement.formAction,
+                {
+                    method: form.method,
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                })
+                .then((response) => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+
+                    throw new Error();
+                })
+                .then((response) => {
+                    // read json from the response stream
+                    const data = JSON.parse(response);
+                    var funcs = data.functions;
+                    var table = data.table;
+
+                    selectFindRootsFunction.length = 1;
+                    selectFindMaximumFunction.length = 1;
+                    selectFindMinimumFunction.length = 1;
+                    selectFindTanLineFunction.length = 1;
+
+                    for (var j = 1; j < table.cols.length; j++) {
+
+                        j += 1;
+                        table.cols.splice(j, 0, JSON.parse('{"label": "PointsZeroMaxMin","type": "string", "role": "style", "p":{"role":"style"}}'));
+
+                        for (var k = 0; k < table.rows.length; k++) {
+                            table.rows[k].c.splice(j, 0, JSON.parse('{"v": null }'));
+                        }
+                    }
+
+                    for (var i = 0; i < funcs.length; i++) {
+
+                        selectFindRootsFunction.options[selectFindRootsFunction.options.length] = new Option(funcs[i].function, funcs[i].function);
+                        selectFindMaximumFunction.options[selectFindMaximumFunction.options.length] = new Option(funcs[i].function, funcs[i].function);
+                        selectFindMinimumFunction.options[selectFindMinimumFunction.options.length] = new Option(funcs[i].function, funcs[i].function);
+                        selectFindTanLineFunction.options[selectFindTanLineFunction.options.length] = new Option(funcs[i].function, funcs[i].function);
+
+                        for (var j = 0; j < table.cols.length; j++) {
+                            if (table.cols[j].label.localeCompare(funcs[i].function) == 0) {
+                                j += 1;
+                                for (var k = 0; k < table.rows.length; k++) {
+                                    for (var n = 0; n < funcs[i].roots.length; n++) {
+                                        if (table.rows[k].c[0].v === funcs[i].roots[n]) {
+                                            table.rows[k].c[j].v = JSON.parse('"point { size: 7; shape-type: diamond; }"');
+                                            break;
+                                        }
+                                    }
+                                    for (var n = 0; n < funcs[i].localMaxExtremes.length; n++) {
+                                        if (table.rows[k].c[0].v === funcs[i].localMaxExtremes[n]) {
+                                            table.rows[k].c[j].v = JSON.parse('"point { size: 7; shape-type: diamond; }"');
+                                            break;
+                                        }
+                                    }
+                                    for (var n = 0; n < funcs[i].localMinExtremes.length; n++) {
+                                        if (table.rows[k].c[0].v === funcs[i].localMinExtremes[n]) {
+                                            table.rows[k].c[j].v = JSON.parse('"point { size: 7; shape-type: diamond; }"');
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    return JSON.stringify(table);
+                })
+                .then((dataJson) => {
+                    //pw.innerHTML = dataJson;
+                    // and display the data
+                    dataJson = dataJson.replaceAll("\"NaN\"", null);
+                    data = new google.visualization.DataTable(dataJson);
+                    view = new google.visualization.DataView(data);
+
+                    var columns = [];
+                    var series = {};
+                    for (var i = 0; i < (data.getNumberOfColumns()); i++) {
+                        columns.push(i);
+                        if (i > 0) {
+                            series[(i - 1) / 2] = {};
+                        }
+                    }
+
+                    var options = {
+                        title: 'Function Line Graph',
+                        hAxis: {
+                            title: 'Axis X',
+                            format: 'long',
+                        },
+                        vAxis: {
+                            title: 'Axis Y',
+                            format: 'long',
+                        },
+                        explorer: {
+                            keepInBounds: true,
+                            maxZoomIn: 10000.0,
+                            maxZoomOut: 1.0,
+                            zoomDelta: 1.1
+                        },
+                        legend: {
+                            position: 'top',
+                            alignment: 'center',
+                            textStyle: { bold: true, italic: true, fontSize: 13 }
+                        },
+                        curveType: 'function',
+                        interpolateNulls: true,
+                        responsive: true,
+                        pointSize: 1.5,
+                        series: series,
+                        colors: ['blue', 'red', '#22AA99', '#990099', '#E67300', 'green', 'yellow', 'black']
+                    };
+
+                    google.visualization.events.addListener(chart, 'select', function () {
+                        // grab a few details before redirecting
+                        var selection = chart.getSelection();
+
+                        // if row is undefined, we clicked on the legend
+                        if (selection[0].row == null) {
+                            var col = selection[0].column;
+
+                            if (columns[col] == col) {
+                                // hide the data series
+                                columns[col] = {
+                                    label: data.getColumnLabel(col),
+                                    type: data.getColumnType(col),
+                                    calc: function () {
+                                        return null;
+                                    }
+                                };
+
+                                // grey out the legend entry
+                                series[(col - 1) / 2].color = '#CCCCCC';
+                            }
+                            else {
+                                // show the data series
+                                columns[col] = col;
+                                series[(col - 1) / 2].color = null;
+                            }
+                            var view = new google.visualization.DataView(data);
+                            view.setColumns(columns);
+                            chart.draw(view, options);
+                        }
+                    });
+
+                    chart.draw(view, options);
+                    document.getElementById("Function").value = "";
+                }).catch((error) => {
+                    const message = `An Error has occurred. Please retry.`;
+                    document.getElementById('lineChart').innerHTML = "";
+                    lineChart.style.height = "100px";
+                    alert(message);
+                });
+        }
+    </script>
+    <script>
+        /*An array containing all the country names in the world:*/
+        var keyWords = ["sin()", "cos()", "tan()", "ln()", "log()", "log(,)", "derivative()", "derivative(,)", "integral()"];
+
+        autocomplete(document.getElementById("Function"), keyWords);
+
+    </script>
+    }
+
+<div class="text-center">
+    <h1 class="mb-4">MathGraph</h1>
+</div>
+
+
+<form method="post" class="m-2" name="loadForm" id="loadForm" asp-page="Index" autocomplete="off">
+
+    <div class="input-group mb-2">
+
+        <div class="input-group-prepend">
+            <span class="input-group-text">Function</span>
+        </div>
+        <input asp-for="Input.Function" type="text" id="Function" name="Function" class="autocomplete form-control" placeholder="Enter Function i.e: y = sin(x)" autofocus="on" />
+    </div>
+    
+    <div class="text-center mb-4 col-sm-12">
+        <div class="input-group-append btn-group col-sm-8" role="group">
+            <button asp-page-handler="Load" type="submit" class="btn btn-primary" onclick="drawLineChart(this)">Submit</button>
+            <button asp-page-handler="Add" type="submit" class="btn btn-primary" onclick="drawLineChart(this)">Add</button>
+        </div>
+    </div>
+
+
+    <div class="row">
+
+        <div class="form-group col-md-4 me-2">
+            <div class="input-group mb-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Max Range</span>
+                </div>
+                <input asp-for="Input.RangeMax" class="form-control" name="RangeMax" type="number" step="any" value="10" placeholder="Enter Maximun Range" />
+            </div>
+        </div>
+
+        <div class="form-group col-md-4 me-2">
+            <div class="input-group mb-2">
+                <div class="input-group-prepend">
+                    <small class="input-group-text">Min Range</small>
+                </div>
+                <input asp-for="Input.RangeMin" class="form-control" name="RangeMin" type="number" step="any" value="-10" placeholder="Enter Minimun Range" />
+            </div>
+        </div>
+
+        <div class="form-group col-md-3 me-2">
+            <div class="input-group mb-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Step</span>
+                </div>
+                <input asp-for="Input.Step" class="form-control" name="Step" type="number" step="0.25" value="0.5" placeholder="Enter Step" />
+            </div>
+        </div>
+
+    </div>
+
+    <div class="text-center col-sm-12">
+        <button asp-page-handler="FixRange" type="submit" class="btn btn-info btn-sm col-sm-6" onclick="drawLineChart(this)">Fix Range</button>
+    </div>
+
+</form>
+
+
+<div id="lineChart" style="width: 100%; height: 100px; cursor: default;"></div>
+
+
+<form method="post" name="FindRootsForm" id="FindRootsForm" asp-page="Index" >
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Find Roots Of:</span>
+        </div>
+        <select class="form-select" name="RootsFunction" id="selectFindRootsFunction" aria-describedby="FindRootsButton-addon">
+            <option value="" selected="selected">Select Function</option>
+        </select>
+        <div class="input-group-append">
+            <button asp-page-handler="FindRoots" class="btn btn-primary" type="submit" id="FindRootsButton-addon" onclick="drawLineChart(this)">Find</button>
+        </div>
+    </div>
+</form>
+
+<form method="post" name="FindTanLineForm" id="FindTanLineForm" asp-page="Index">
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Find Tangent Line Of:</span>
+        </div>
+        <select class="form-select" name="TanLineFunction" id="selectFindTanLineFunction">
+            <option value="" selected="selected">Select Function</option>
+        </select>
+        <input class="form-control" name="Point" type="number" value="0" step="any" placeholder="Enter Point" aria-describedby="FindTanLineButton-addon" />
+        <div class="input-group-append">
+            <button asp-page-handler="FindTanLine" class="btn btn-primary" type="submit" id="FindFindTanLineButton-addon" onclick="drawLineChart(this)">Find</button>
+        </div>
+    </div>
+</form>
+
+<form method="post" name="FindMaximumForm" id="FindMaximumForm" asp-page="Index">
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Find Maximum Of:</span>
+        </div>
+        <select class="form-select" name="MaxFunction" id="selectFindMaximumFunction" aria-describedby="FindMaximumButton-addon">
+            <option value="" selected="selected">Select Function</option>
+        </select>
+        <div class="input-group-append">
+            <button asp-page-handler="FindMaximum" class="btn btn-primary" type="submit" id="FindMaximumButton-addon" onclick="drawLineChart(this)">Find</button>
+        </div>
+    </div>
+</form>
+
+<form method="post" name="FindMinimumForm" id="FindMinimumForm" asp-page="Index">
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Find Minimum Of:</span>
+        </div>
+        <select class="form-select" name="MinFunction" id="selectFindMinimumFunction" aria-describedby="FindMinimumButton-addon">
+            <option value="" selected="selected">Select Function</option>
+        </select>
+        <div class="input-group-append">
+            <button asp-page-handler="FindMinimum" class="btn btn-primary" type="submit" id="FindMinimumButton-addon" onclick="drawLineChart(this)">Find</button>
+        </div>
+    </div>
+</form>  

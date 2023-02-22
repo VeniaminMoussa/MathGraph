@@ -1,0 +1,385 @@
+﻿@page
+@model WebAppMathGraph.Pages.WorkSpaceModel
+@{
+    ViewData["Title"] = "WorkSpace";
+}
+@section Scripts{
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">google.charts.load('current', { 'packages': ['corechart'] });</script>
+
+    <script>
+        async function drawLineChart(buttonElement) {
+
+            event.preventDefault();
+
+            lineChart.style.height = "800px";
+            var chart = new google.visualization.LineChart(document.getElementById('lineChart'));
+            var data, view;
+            form = buttonElement.form;
+
+            // aysnchronous fetch ajax
+            fetch(buttonElement.formAction,
+                {
+                    method: form.method,
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                })
+                .then((response) => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    
+                    throw new Error();
+                })
+                .then((response) => {
+                    // read json from the response stream
+                    const data = JSON.parse(response);
+                    var funcs = data.functions;
+                    var table = data.table;
+
+                    for (var j = 1; j < table.cols.length; j++) {
+
+                        j += 1;
+                        table.cols.splice(j, 0, JSON.parse('{"label": "PointsZeroMaxMin","type": "string", "role": "style", "p":{"role":"style"}}'));
+
+                        for (var k = 0; k < table.rows.length; k++) {
+                            table.rows[k].c.splice(j, 0, JSON.parse('{"v": null }'));
+                        }
+                    }
+
+                    for (var i = 0; i < funcs.length; i++) {
+                        for (var j = 0; j < table.cols.length; j++) {
+                            if (table.cols[j].label.localeCompare(funcs[i].function) == 0) {
+                                j += 1;
+                                for (var k = 0; k < table.rows.length; k++) {
+                                    for (var n = 0; n < funcs[i].roots.length; n++) {
+                                        if (table.rows[k].c[0].v === funcs[i].roots[n]) {
+                                            table.rows[k].c[j].v = JSON.parse('"point { size: 7; shape-type: diamond; }"');
+                                            break;
+                                        }
+                                    }
+                                    for (var n = 0; n < funcs[i].localMaxExtremes.length; n++) {
+                                        if (table.rows[k].c[0].v === funcs[i].localMaxExtremes[n]) {
+                                            table.rows[k].c[j].v = JSON.parse('"point { size: 7; shape-type: diamond; }"');
+                                            break;
+                                        }
+                                    }
+                                    for (var n = 0; n < funcs[i].localMinExtremes.length; n++) {
+                                        if (table.rows[k].c[0].v === funcs[i].localMinExtremes[n]) {
+                                            table.rows[k].c[j].v = JSON.parse('"point { size: 7; shape-type: diamond; }"');
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    return JSON.stringify(data);
+                })
+                .then((response) => {
+                    // read json from the response stream
+                    const data = JSON.parse(response);
+                    var funcs = data.functions;
+                    var table = data.table;
+
+                    if (WorkSapce.value.length != 0) {
+
+                        var lines = WorkSapce.value.trim().split("\n");
+
+                        for (var i = lines.length - 1; i >= 0; i--) {
+                            if (lines[i].startsWith('>>')) {
+                                continue;
+                            }
+
+                            if (lines[i].toLowerCase().includes("findrootsof")) {
+                                for (var j = 0; j < funcs.length; j++) {
+                                    if (lines[i].substring(12).includes(funcs[j].name) ||
+                                        lines[i].substring(12).includes(funcs[j].functionBody) ||
+                                        lines[i].substring(12).includes(funcs[j].function)) {
+
+                                        let txt = "\n\tRoots:[ ";
+
+                                        for (var k = 0; k < funcs[j].roots.length; k++) {
+                                            if (k != 0) {
+                                                txt += "\t\t    ";
+                                            }
+                                            txt += "root" + k + " = " + funcs[j].roots[k] + "\n";
+                                        }
+                                        txt += "\t\t  ] ";
+                                        lines[i] += txt;
+
+                                        WorkSapce.value = lines.join('\n');
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (lines[i].toLowerCase().includes("findmaxextremeof")) {
+                                for (var j = 0; j < funcs.length; j++) {
+                                    if (lines[i].substring(17).includes(funcs[j].name) ||
+                                        lines[i].substring(17).includes(funcs[j].functionBody) ||
+                                        lines[i].substring(17).includes(funcs[j].function)) {
+
+                                        let txt = "\n\tLocal Max Extremes:[ ";
+
+                                        for (var k = 0; k < funcs[j].localMaxExtremes.length; k++) {
+                                            if (k != 0) {
+                                                txt += "\t\t\t\t\t   ";
+                                            }
+                                            txt += "x" + k + " = " + funcs[j].localMaxExtremes[k] + "\n";
+                                        }
+                                        txt += "\t\t\t\t\t ] ";
+                                        lines[i] += txt;
+                                        WorkSapce.value = lines.join('\n');
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (lines[i].toLowerCase().includes("findminextremeof")) {
+                                for (var j = 0; j < funcs.length; j++) {
+                                    if (lines[i].substring(17).includes(funcs[j].name) ||
+                                        lines[i].substring(17).includes(funcs[j].functionBody) ||
+                                        lines[i].substring(17).includes(funcs[j].function)) {
+
+                                        let txt = "\n\tLocal Min Extremes:[ ";
+
+                                        for (var k = 0; k < funcs[j].localMinExtremes.length; k++) {
+                                            if (k != 0) {
+                                                txt += "\t\t\t\t\t   ";
+                                            }
+                                            txt += "x" + k + " = " + funcs[j].localMinExtremes[k] + "\n";
+                                        }
+                                        txt += "\t\t\t\t\t ] ";
+                                        lines[i] += txt;
+                                        WorkSapce.value = lines.join('\n');
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    return JSON.stringify(table);
+                })
+                .then((dataJson) => {
+                    // and display the data
+                    dataJson = dataJson.replaceAll("\"NaN\"", null);
+                    data = new google.visualization.DataTable(dataJson);
+                    view = new google.visualization.DataView(data);
+
+                    var columns = [];
+                    var series = {};
+                    for (var i = 0; i < (data.getNumberOfColumns()); i++) {
+                        columns.push(i);
+                        if (i > 0) {
+                            series[(i - 1) / 2] = {};
+                        }
+                    }
+
+                    var options = {
+                        title: 'Function Line Graph',
+                        hAxis: {
+                            title: 'Axis X',
+                            format: 'long',
+                        },
+                        vAxis: {
+                            title: 'Axis Y',
+                            format: 'long',
+                        },
+                        explorer: {
+                            keepInBounds: true,
+                            maxZoomIn: 10000.0,
+                            maxZoomOut: 1.0,
+                            zoomDelta: 1.1
+                        },
+                        legend: {
+                            position: 'top',
+                            alignment: 'center',
+                            textStyle: { bold: true, italic: true, fontSize: 13 }
+                        },
+                        curveType: 'function',
+                        interpolateNulls: true,
+                        responsive: true,
+                        pointSize: 1.5,
+                        series: series,
+                        colors: ['blue', 'red', '#22AA99', '#990099', '#E67300', 'green', 'yellow', 'black']
+                    };
+
+                    google.visualization.events.addListener(chart, 'select', function () {
+                        // grab a few details before redirecting
+                        var selection = chart.getSelection();
+                        // if selection length is 0, we deselected an element
+                        if (selection.length > 0) {
+                            // if row is undefined, we clicked on the legend
+                            if (selection[0].row == null) {
+                                var col = selection[0].column;
+
+                                if (columns[col] == col) {
+                                    // hide the data series
+                                    columns[col] = {
+                                        label: data.getColumnLabel(col),
+                                        type: data.getColumnType(col),
+                                        calc: function () {
+                                            return null;
+                                        }
+                                    };
+
+                                    // grey out the legend entry
+                                    series[(col - 1) / 2].color = '#CCCCCC';
+                                }
+                                else {
+                                    // show the data series
+                                    columns[col] = col;
+                                    series[(col - 1) / 2].color = null;
+                                }
+                                var view = new google.visualization.DataView(data);
+                                view.setColumns(columns);
+                                chart.draw(view, options);
+                            }
+                        }
+                    });
+
+                    chart.draw(view, options);
+
+                    transFormToHistory();
+                }).catch((error) => {
+                    const message = `An Error has occurred. Please retry.`;
+                    document.getElementById('lineChart').innerHTML = "";
+                    lineChart.style.height = "100px";
+                    alert(message);
+                });
+        }
+    </script>
+
+    <script type="text/javascript">
+        function handleKeyPressDown(event) {
+
+            var readOnlyLength = CommandHistory.value.length;
+            var keyName = event.key;
+            var codeName = event.code;
+            var cursorIndex = event.target.selectionStart;
+
+            if (event.target.selectionStart == event.target.selectionEnd) {
+                if (((keyName == "Backspace") || (keyName == "ArrowLeft")) && (cursorIndex <= readOnlyLength)) {
+                    event.preventDefault();
+                    return;
+                }
+            }
+
+            if ((codeName != "Unidentified") && (cursorIndex < readOnlyLength)) {
+                event.preventDefault();
+                return;
+            }
+
+            if (keyName == "ArrowUp") {
+
+                var lines = event.target.value.split("\n");
+                var linesHistory = CommandHistory.value.split("\n");
+
+                var indexNow = cursorIndex - readOnlyLength;
+                var rowLength = lines[linesHistory.length - 1].length;
+
+                if (rowLength >= indexNow) {
+                    event.preventDefault();
+                    return;
+                }
+            }
+
+            if (keyName == "Tab") {
+
+                event.preventDefault();
+
+                var start = event.target.selectionStart;
+                var end = event.target.selectionEnd;
+
+                // set textarea value to: text before caret + tab + text after caret
+                event.target.value = event.target.value.substring(0, start) + "\t" + event.target.value.substring(end);
+
+                // put caret at right position again
+                event.target.selectionStart = event.target.selectionEnd = start + 1;
+
+                return;
+            }
+            return;
+        }
+    </script>
+
+    <script>
+        function handleDrop(event) {
+
+            event.preventDefault();
+        }
+    </script>
+
+    <script>
+        function transFormToHistory() {
+
+            if (WorkSapce.value.toLowerCase().includes("clear")) {
+                var lines = WorkSapce.value.toLowerCase().trim().split("clear;");
+                WorkSapce.value = lines[lines.length - 1].trim();
+            }
+
+            if (WorkSapce.value.length != 0) {
+
+                var lines = WorkSapce.value.trim().split("\n");
+
+                for (var i = 0; i < lines.length; i++) {
+                    if (!lines[i].startsWith('>>')) {
+                        lines[i] = ">> " + lines[i];
+                    }
+                }
+
+                WorkSapce.value = lines.join("\n") + "\n";
+
+                WorkSapce.replaceWith(WorkSapce.cloneNode(true));
+
+                WorkSapce.setSelectionRange(WorkSapce.value.length, WorkSapce.value.length);
+                WorkSapce.focus();
+            }
+
+            CommandHistory.value = WorkSapce.value;
+
+            WorkSapce.addEventListener('keydown', handleKeyPressDown);
+            WorkSapce.addEventListener('keypress', handleKeyPressDown);
+            WorkSapce.addEventListener('drop', handleDrop);
+
+            autocomplete(WorkSapce, keyWords);
+        }
+    </script>
+
+    <script>
+        /*An array containing all the country names in the world:*/
+        var keyWords = ["FindRootsOf();", "FindMaxExtremeOf();", "FindMinExtremeOf();", "TanLineOfAt(,);", "step : ", "range : []", "range : [,]", "sin()", "cos()", "tan()", "ln()", "log()", "log(,)", "derivative()", "derivative(,)", "integral()", "clear;"];
+        /*initiate the autocomplete function on the "WorkSapce" element, and pass along the keywords array as possible autocomplete values:*/
+        transFormToHistory();
+    </script>
+}
+
+<div class="text-center">
+    <h1 class="mb-4">WorkSpace</h1>
+</div>
+
+<form method="post" id="loadForm" asp-page="Workspace" autocomplete="off">
+    <div class="autocomplete mb-2">
+        <label asp-for="WorkSpace"></label>
+        <textarea asp-for="WorkSpace"
+                  id="WorkSapce"
+                  class="form-control"
+                  rows="10"
+                  placeholder="Enter Code i.e:&#x0a;y = sin(x);&#x0a;x {&#x0a;&#x09;range: [-10, 10],&#x0a;&#x09;step: 0.1&#x0a;};"
+                  autofocus="on">
+            </textarea>
+        <input type="hidden" id="CommandHistory" value="" />
+    </div>
+
+    <div class="text-center col-sm-12">
+        <button asp-page-handler="Load" type="submit" class="btn btn-primary col-sm-6" id="load" onclick="drawLineChart(this)">Submit</button>
+    </div>
+    
+</form>
+
+<div id="lineChart" style="width: 100%; cursor: default;"></div>

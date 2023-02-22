@@ -1,0 +1,207 @@
+digraph {
+	subgraph cluster0{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CVariable_1;CFunction_12;CFunction_21;CFunction_26;
+		label=COMPILEUNIT_MATHSTATEMENTCONTEXT;
+	}
+	subgraph cluster1{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_2_x;
+		label=VARIABLE_NAMECONTEXT;
+	}
+	subgraph cluster2{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CPair_3;CPair_9;
+		label=VARIABLE_BODYCONTEXT;
+	}
+CVariable_1->CIdentifier_2_x
+	subgraph cluster3{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_4_range;
+		label=PAIR_LEFTCONTEXT;
+	}
+	subgraph cluster4{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CValueArray_5;
+		label=PAIR_RIGHTCONTEXT;
+	}
+CPair_3->CIdentifier_4_range
+	subgraph cluster5{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CValueMinus_6;CNumber_8_15;
+		label=ARRAY_BODYCONTEXT;
+	}
+	subgraph cluster6{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CNumber_7_15;
+		label=MINUS_VALUECONTEXT;
+	}
+CValueMinus_6->CNumber_7_15
+CValueArray_5->CValueMinus_6
+CValueArray_5->CNumber_8_15
+CPair_3->CValueArray_5
+CVariable_1->CPair_3
+	subgraph cluster7{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_10_step;
+		label=PAIR_LEFTCONTEXT;
+	}
+	subgraph cluster8{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CNumber_11_0.1;
+		label=PAIR_RIGHTCONTEXT;
+	}
+CPair_9->CIdentifier_10_step
+CPair_9->CNumber_11_0.1
+CVariable_1->CPair_9
+CCompileUnit_0->CVariable_1
+	subgraph cluster9{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_13_f;
+		label=FUNCTION_NAMECONTEXT;
+	}
+	subgraph cluster10{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CFCall_14;
+		label=FUNCTION_BODYCONTEXT;
+	}
+CFunction_12->CIdentifier_13_f
+	subgraph cluster11{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_15_sin;
+		label=FCALL_NAMECONTEXT;
+	}
+	subgraph cluster12{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CPower_16;
+		label=FCALL_ARGSCONTEXT;
+	}
+CFCall_14->CIdentifier_15_sin
+	subgraph cluster13{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_17_x;
+		label=POWER_BASE;
+	}
+	subgraph cluster14{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CFCall_18;
+		label=POWER_EXPONENT;
+	}
+CPower_16->CIdentifier_17_x
+	subgraph cluster15{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_19_cos;
+		label=FCALL_NAMECONTEXT;
+	}
+	subgraph cluster16{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_20_x;
+		label=FCALL_ARGSCONTEXT;
+	}
+CFCall_18->CIdentifier_19_cos
+CFCall_18->CIdentifier_20_x
+CPower_16->CFCall_18
+CFCall_14->CPower_16
+CFunction_12->CFCall_14
+CCompileUnit_0->CFunction_12
+	subgraph cluster17{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_22_y;
+		label=FUNCTION_NAMECONTEXT;
+	}
+	subgraph cluster18{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CFCall_23;
+		label=FUNCTION_BODYCONTEXT;
+	}
+CFunction_21->CIdentifier_22_y
+	subgraph cluster19{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_24_derivative;
+		label=FCALL_NAMECONTEXT;
+	}
+	subgraph cluster20{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_25_f;
+		label=FCALL_ARGSCONTEXT;
+	}
+CFCall_23->CIdentifier_24_derivative
+CFCall_23->CIdentifier_25_f
+CFunction_21->CFCall_23
+CCompileUnit_0->CFunction_21
+	subgraph cluster21{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_27_z;
+		label=FUNCTION_NAMECONTEXT;
+	}
+	subgraph cluster22{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CFCall_28;
+		label=FUNCTION_BODYCONTEXT;
+	}
+CFunction_26->CIdentifier_27_z
+	subgraph cluster23{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_29_integral;
+		label=FCALL_NAMECONTEXT;
+	}
+	subgraph cluster24{
+		node [style=filled,color=white];
+		style=filled;
+		color=lightgrey;
+		CIdentifier_30_f;
+		label=FCALL_ARGSCONTEXT;
+	}
+CFCall_28->CIdentifier_29_integral
+CFCall_28->CIdentifier_30_f
+CFunction_26->CFCall_28
+CCompileUnit_0->CFunction_26
+}
